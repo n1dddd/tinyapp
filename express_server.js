@@ -2,6 +2,16 @@ const express = require("express");
 const bodyParser = require('body-parser')
 const app = express();
 const PORT = 8080;
+
+function generateRandomString() {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length))
+  }
+  return result;
+}
+
 app.use(express.urlencoded({ extended: true }))
 
 app.set('view engine','ejs');
