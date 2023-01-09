@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <%- include('partials/_header'); %>
     <meta charset="utf-8" />
     <meta
       name="viewport"
@@ -24,6 +25,7 @@
             <tr>
               <th scope="col">Short URL ID</th>
               <th scope="col">Long URL</th>
+              <th scope="col">Delete</th>
               </tr>
           </thead>
           <tbody>
@@ -31,6 +33,11 @@
               <tr>
                 <td><%= id %></td>
                 <td><%= urls[id] %></td>
+                <td>
+                  <form class="form-inline" action="/urls/<%= id %>/delete" method="POST">
+                    <button type="delete" class="btn btn-primary">Delete</button>
+                  </form>
+                </td>
               </tr>
               <% } %>
           </tbody>
@@ -38,7 +45,7 @@
       </main>
       <!-- Bootstrap JS -->
     <script
-    src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    src="https://coSde.jquery.com/jquery-3.3.1.slim.min.js"
     integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
     crossorigin="anonymous"
   ></script>
