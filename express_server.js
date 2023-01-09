@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require('body-parser')
+const morgan = require('morgan')
 const app = express();
 const PORT = 8080;
 
@@ -12,7 +13,8 @@ function generateRandomString() {
   return result;
 }
 
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan("tiny"));
 
 app.set('view engine','ejs');
 
@@ -34,13 +36,17 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 })
 
-app.get("urls/new", (req,res) => {
-  res.render("urls_new");
-})
+// app.get("urls/new", (req,res) => {
+//   res.render("urls_new");
+// })
 
 app.post("/urls",(req,res)=> {
   console.log(req.body);
   res.send("Ok");
+})
+
+app.post("/urls", (req, res) => {
+  res.redirect(`/urls/${id}`)
 })
 
 app.get("/urls/:id", (req,res) => {
