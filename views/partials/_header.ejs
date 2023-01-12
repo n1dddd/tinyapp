@@ -11,13 +11,13 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if (username) { %>
-    <h3 class="navbar-brand">TinyApp Username: <%= username %></h3>
+    <% if (user) { %>
+    <h3 class="navbar-brand">TinyApp Username: <%= user.email %></h3>
     <form class="form-inline" action="/logout" method="POST">
       <button type="submit" class="btn btn-primary">Logout</button>
     </form>
     <% } %>
-    <% if (!username) { %>
+    <% if (!user) { %>
     <form class="form-inline" action="/urls/login" method="POST">
       <label for="username"></label>
       <input class="form-control" type="text" name="username" placeholder="UserName"
