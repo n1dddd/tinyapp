@@ -12,16 +12,15 @@
       </div>
     </div>
     <% if (user) { %>
-    <h3 class="navbar-brand">TinyApp Username: <%= user.email %></h3>
     <form class="form-inline" action="/logout" method="POST">
       <button type="submit" class="btn btn-primary">Logout</button>
     </form>
     <% } %>
     <% if (!user) { %>
-    <form class="form-inline" action="/urls/login" method="POST">
-      <label for="username"></label>
-      <input class="form-control" type="text" name="username" placeholder="UserName"
-        style="width: 200px; margin: lem;" />
+    <form class="form-inline" action="/register" method="GET">
+      <button type="submit" class="btn btn-primary" style="justify-content: right">Register</button>
+    </form>
+    <form class="form-inline" action="/login" method="GET">
       <button type="submit" class="btn btn-primary" style="justify-content: right">Login</button>
     </form>
     <% } %>
