@@ -22,6 +22,15 @@ const generateRandomString = function () {
   return result;
 };
 
+const userValidator = function (userProperty, reqBody, database) {
+  for (const user in database) {
+    if (reqBody[userProperty] === database[user][userProperty]) {
+      return false
+    }
+  }
+  return true;
+}
+
 const urlDatabase = {
 
 };
@@ -31,8 +40,7 @@ const users = {
 }
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, user: req.cookies.user_id};
-  console.log(templateVars)
+  const templateVars = { urls: urlDatabase, user: req.cookies.user_id };
   res.render("urls_index", templateVars);
 });
 
@@ -75,6 +83,10 @@ app.get("/register", (req, res) => {
   res.render("register")
 })
 
+app.get("/login", (req, res) => {
+  res.render("login")
+})
+
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
@@ -85,27 +97,35 @@ app.post("/urls/:id/update", (req, res) => {
   res.redirect(`/urls`);
 });
 
-app.post("/urls/login", (req, res) => {
+app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);
   res.redirect("/urls")
 })
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls")
 });
 
 app.post("/register", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password
-  const userRandomId = generateRandomString();
-  users[userRandomId] = {
-    id: userRandomId,
-    email,
-    password
+  if (!req.body.email || !req.body.password) {
+    return res.status(400).send(`Please enter valid entriers into BOTH data fields`);
   }
-  res.cookie('user_id', users[userRandomId])
-  res.redirect("/urls")
+  else if (!userValidator('email', req.body, users)) {
+    return res.status(400).send(`User with the email ${req.body['email']} already registered.`);
+  }
+  else if (userValidator('email', req.body, users)) {
+    const email = req.body.email;
+    const password = req.body.password
+    const userRandomId = generateRandomString();
+    users[userRandomId] = {
+      id: userRandomId,
+      email,
+      password
+    }
+    res.cookie('user_id', users[userRandomId])
+    res.redirect("/urls")
+  }
 })
 
 
