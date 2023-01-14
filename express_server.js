@@ -13,7 +13,7 @@ app.use(cookieParser());
 
 app.set('view engine', 'ejs');
 
-const generateRandomString = function () {
+const generateRandomString = function () { //function to return randomized 6 char string
   const characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
   let result = "";
   for (let i = 0; i < 6; i++) {
@@ -22,7 +22,7 @@ const generateRandomString = function () {
   return result;
 };
 
-const emailValidator = function (userProperty, reqBody, database) { //Function to return if user email registered in database
+const userValidator = function (userProperty, reqBody, database) { //Function to return false if user email registered in users database, true if not
   for (const user in database) {
     if (reqBody[userProperty] === database[user][userProperty]) {
       return false
@@ -65,11 +65,13 @@ app.get("urls/new", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("register")
+  const templateVars = { user: req.cookies.user_id }
+  res.render("register", templateVars)
 });
 
 app.get("/login", (req, res) => {
-  res.render("login")
+  const templateVars = { user: req.cookies.user_id }
+  res.render("login", templateVars)
 });
 
 app.post("/urls", (req, res) => {
@@ -90,32 +92,40 @@ app.post("/urls/:id/update", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('user_id', req.cookie.user_id);
-  res.redirect("/urls")
+  if (userValidator('email', req.body, users)) {
+    return res.status(403).send(`${req.body.email} user cannot be found.`)
+  }
+  else if (userValidator('password', req.body, users)) {
+    return res.status(403).send('Incorrect password');
+  }
+  else if (!userValidator('password', req.body, users)) {
+    res.cookie('user_id', users.user.id)
+    res.redirect("/urls")
+  }
 })
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
-  res.redirect("/urls")
+  res.redirect("/login")
 });
 
 app.post("/register", (req, res) => {
   if (!req.body.email || !req.body.password) {
     return res.status(400).send(`Please enter valid entriers into BOTH data fields`);
   }
-  else if (!emailValidator('email', req.body, users)) {
+  else if (!userValidator('email', req.body, users)) {
     return res.status(400).send(`User with the email ${req.body['email']} already registered.`);
   }
-  else if (emailValidator('email', req.body, users)) {
+  else if (userValidator('email', req.body, users)) {
     const email = req.body.email;
     const password = req.body.password
     const userRandomId = generateRandomString();
-    users[userRandomId] = {
+    users.user = {
       id: userRandomId,
       email,
       password
     }
-    res.cookie('user_id', users[userRandomId])
+    res.cookie('user_id', users.user)
     res.redirect("/urls")
   }
 })
