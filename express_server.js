@@ -31,6 +31,14 @@ const userValidator = function (userProperty, reqBody, database) { //Function to
   return true;
 }
 
+const getUserByEmail = function (email, database) {
+  for (const id in database) {
+    if (email === database[id]['email']) {
+      return database[id]['id']
+    }
+  }
+}
+
 const urlsForUser = (id, database) => {
   const matchingIdObject = {};
   for (const key in database) {
@@ -85,7 +93,7 @@ app.get("/u/:id", (req, res) => {
 
 app.get("/register", (req, res) => {
   if (users[req.cookies.user_id]) {
-    res.redirect("/urls");
+    res.redirect("/urls"); 
   }
   else if (!users[req.cookies.user_id]) {
     const templateVars = { user: users[req.cookies.user_id] }
@@ -118,36 +126,48 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
+  const variables = {
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id]['longURL'],
+    user: req.cookies.user_id
+  }
   if(!users[req.cookies.user_id]) {
     res.status(401).send("Must be logged in to do this")
   }
-  if (users[req.cookies.user_id] && !(urlsForUser(users["id"], urlDatabase)[req.params.id])) {
-    res.status(404).send("Not yours to delete!")
+  const id = getUserByEmail(req.body.email, users);
+  if (users[req.cookies.user_id] && !(urlsForUser(variables.user, urlDatabase)[variables.id])) {
+    res.status(403).send("Not yours to delete!")
   }
-  delete urlDatabase[req.params.id];
+  delete urlDatabase[variables.id];
   res.redirect("/urls");
 });
 
-app.post("/urls/:id/update", (req, res) => {
+app.post("/urls/:id", (req, res) => {
+  const variables = {
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id]['longURL'],
+    user: req.cookies.user_id
+  }
   if(!users[req.cookies.user_id]) {
     res.status(401).send("Must be logged in to do this")
   }
-  if(users[req.cookies.user_id] && !(urlsForUser(users["id"], urlDatabase)[req.params.id]))
+  if(users[req.cookies.user_id] && !(urlsForUser(variables.user, urlDatabase)[variables.id])) {
+    res.status(403).send('Not yours to update!')
+  }
   urlDatabase[req.params.id].longURL = req.body.newURL;
   res.redirect(`/urls`);
 });
 
 app.post("/login", (req, res) => {
+  const id = getUserByEmail(req.body.email, users);
   if (userValidator('email', req.body, users)) {
-    return res.status(403).send(`${req.body.email} user cannot be found.`)
+    return res.status(404).send(`${req.body.email} user cannot be found.`)
   }
-  else if (userValidator('password', req.body, users)) {
-    return res.status(403).send('Incorrect password');
+  if (userValidator('password', req.body, users)) {
+    return res.status(401).send('Incorrect password');
   }
-  else if (!userValidator('password', req.body, users)) {
-    res.cookie('user_id', users.user.id)
-    res.redirect("/urls")
-  }
+  res.cookie('user_id', users[id].id)
+  res.redirect('/urls')
 })
 
 app.post("/logout", (req, res) => {
