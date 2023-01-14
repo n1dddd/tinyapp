@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser')
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = 8080;
@@ -121,7 +122,6 @@ app.post("/urls", (req, res) => {
     longURL: longURL,
     userID: req.cookies.user_id
   };
-  console.log(urlDatabase)
   res.redirect(`/urls/${id}`);
 });
 
@@ -163,7 +163,7 @@ app.post("/login", (req, res) => {
   if (userValidator('email', req.body, users)) {
     return res.status(404).send(`${req.body.email} user cannot be found.`)
   }
-  if (userValidator('password', req.body, users)) {
+  if (!bcrypt.compareSync(req.body.password, users[id].hashedPassword)) {
     return res.status(401).send('Incorrect password');
   }
   res.cookie('user_id', users[id].id)
@@ -185,11 +185,12 @@ app.post("/register", (req, res) => {
   else if (userValidator('email', req.body, users)) {
     const email = req.body.email;
     const password = req.body.password
+    const hashedPassword = bcrypt.hashSync(password, 10);
     const userRandomId = generateRandomString();
     users[userRandomId] = {
       id: userRandomId,
       email,
-      password
+      hashedPassword
     }
     res.cookie('user_id', userRandomId)
     res.redirect("/urls")
