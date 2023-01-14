@@ -31,6 +31,17 @@ const userValidator = function (userProperty, reqBody, database) { //Function to
   return true;
 }
 
+const urlsForUser = (id, database) => {
+  const matchingIdObject = {};
+  for (const key in database) {
+    if (database[key].userID === id) {
+      matchingIdObject[key] = database[key];
+    }
+  }
+  console.log(matchingIdObject)
+  return matchingIdObject;
+}
+
 const urlDatabase = {
 
 };
@@ -41,11 +52,15 @@ const users = {
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
+  if (!users[req.cookies.user_id]) {
+    res.status(401).send("Must be logged in to see urls")
+  }
+  templateVars.urls = urlsForUser(templateVars.user["id"], urlDatabase)
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  if(!users[req.cookies.user_id]) {
+  if (!users[req.cookies.user_id]) {
     res.redirect("/login")
   }
   const templateVars = { user: users[req.cookies.user_id] }
@@ -53,12 +68,18 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies.user_id] };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies.user_id] };
+  if(!users[req.cookies.user_id]) {
+    res.status(401).send("Must be logged in to see this")
+  }
+  if (users[req.cookies.user_id] && !(urlsForUser(templateVars.user["id"], urlDatabase)[templateVars.id])) {
+    res.status(403).send("Not your urls")
+  }
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
 });
 
@@ -87,18 +108,32 @@ app.post("/urls", (req, res) => {
     res.status(401).send(`Must be logged into the shorten urls`)
   }
   const id = generateRandomString();
-  const longURLs = req.body.longURL;
-  urlDatabase[id] = longURLs;
+  const longURL = req.body.longURL;
+  urlDatabase[id] = {
+    longURL: longURL,
+    userID: req.cookies.user_id
+  };
+  console.log(urlDatabase)
   res.redirect(`/urls/${id}`);
 });
 
 app.post("/urls/:id/delete", (req, res) => {
+  if(!users[req.cookies.user_id]) {
+    res.status(401).send("Must be logged in to do this")
+  }
+  if (users[req.cookies.user_id] && !(urlsForUser(users["id"], urlDatabase)[req.params.id])) {
+    res.status(404).send("Not yours to delete!")
+  }
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
 
 app.post("/urls/:id/update", (req, res) => {
-  urlDatabase[req.params.id] = req.body.newURL;
+  if(!users[req.cookies.user_id]) {
+    res.status(401).send("Must be logged in to do this")
+  }
+  if(users[req.cookies.user_id] && !(urlsForUser(users["id"], urlDatabase)[req.params.id]))
+  urlDatabase[req.params.id].longURL = req.body.newURL;
   res.redirect(`/urls`);
 });
 
@@ -131,7 +166,7 @@ app.post("/register", (req, res) => {
     const email = req.body.email;
     const password = req.body.password
     const userRandomId = generateRandomString();
-    users[userRandomId]= {
+    users[userRandomId] = {
       id: userRandomId,
       email,
       password
