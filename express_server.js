@@ -45,6 +45,9 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
+  if(!req.cookies.user_id) {
+    res.redirect("/login")
+  }
   const templateVars = { user: req.cookies.user_id }
   res.render("urls_new", templateVars);
 });
@@ -59,19 +62,24 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
-app.get("urls/new", (req, res) => {
-  const templateVars = { user: req.cookies.user_id }
-  res.render("urls_new", templateVars);
-});
-
 app.get("/register", (req, res) => {
-  const templateVars = { user: req.cookies.user_id }
-  res.render("register", templateVars)
+  if (req.cookies.user_id) {
+    res.redirect("/urls");
+  }
+  else if (!req.cookies.user_id) {
+    const templateVars = { user: req.cookies.user_id }
+    res.render("register", templateVars)
+  }
 });
 
 app.get("/login", (req, res) => {
-  const templateVars = { user: req.cookies.user_id }
-  res.render("login", templateVars)
+  if (req.cookies.user_id) {
+    res.redirect("/urls");
+  }
+  else if (!req.cookies.user_id) {
+    const templateVars = { user: req.cookies.user_id };
+    res.render("login", templateVars)
+  }
 });
 
 app.post("/urls", (req, res) => {
