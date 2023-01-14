@@ -31,7 +31,7 @@ app.get("/urls", (req, res) => {
   if (!templateVars.user) {
     res.status(401).send("Must be logged in to see urls")
   }
-  templateVars.urls = urlsForUser(templateVars.user["id"], urlDatabase)
+  templateVars.urls = urlsForUser(templateVars.user["id"], urlDatabase) //set template.Vars.urls to the urls held in the matched user_id database
   res.render("urls_index", templateVars);
 });
 
