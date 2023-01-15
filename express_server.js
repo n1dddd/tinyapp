@@ -28,7 +28,7 @@ const users = {
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase, user: users[req.session.user_id] };
-  if (!templateVars.user) {
+  if (!templateVars.user) { //check if user logged in
     res.status(401).send("Must be logged in to see urls")
   }
   templateVars.urls = urlsForUser(templateVars.user["id"], urlDatabase) //set template.Vars.urls to the urls held in the matched user_id database
@@ -48,7 +48,7 @@ app.get("/urls/:id", (req, res) => {
   if(!users[req.session.user_id]) {
     res.status(401).send("Must be logged in to see this")
   }
-  if (users[req.session.user_id] && !(urlsForUser(templateVars.user["id"], urlDatabase)[templateVars.id])) {
+  if (users[req.session.user_id] && !(urlsForUser(templateVars.user["id"], urlDatabase)[templateVars.id])) { //checks if user, then validated that the urls they are trying to access are not theirs
     res.status(403).send("Not your urls")
   }
   res.render("urls_show", templateVars);
@@ -60,7 +60,7 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  if (users[req.session.user_id]) {
+  if (users[req.session.user_id]) { //if logged in, redirect to /urls
     res.redirect("/urls"); 
   }
   else if (!users[req.session.user_id]) {
@@ -83,9 +83,9 @@ app.post("/urls", (req, res) => {
   if (!users[req.session.user_id]) {
     res.status(401).send(`Must be logged into the shorten urls`)
   }
-  const id = generateRandomString();
+  const id = generateRandomString(); //id for url property
   const longURL = req.body.longURL;
-  urlDatabase[id] = {
+  urlDatabase[id] = { //set longURL and userID to id in urlDatabase object
     longURL: longURL,
     userID: req.session.user_id
   };
@@ -93,7 +93,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const variables = {
+  const variables = { //create object to access variables from
     id: req.params.id,
     longURL: urlDatabase[req.params.id]['longURL'],
     user: req.session.user_id
@@ -127,7 +127,7 @@ app.post("/urls/:id", (req, res) => {
 
 app.post("/login", (req, res) => {
   const id = getUserByEmail(req.body.email, users);
-  if (userValidator('email', req.body, users)) {
+  if (userValidator('email', req.body, users)) { //validates if the email is already in the database
     return res.status(404).send(`${req.body.email} user cannot be found.`)
   }
   if (!bcrypt.compareSync(req.body.password, users[id].hashedPassword)) {
@@ -152,14 +152,14 @@ app.post("/register", (req, res) => {
   else if (userValidator('email', req.body, users)) {
     const email = req.body.email;
     const password = req.body.password
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    const hashedPassword = bcrypt.hashSync(password, 10); //hash password 
     const userRandomId = generateRandomString();
-    users[userRandomId] = {
+    users[userRandomId] = { //create new user with generated random string in users object
       id: userRandomId,
       email,
       hashedPassword
     }
-    req.session.user_id = userRandomId;
+    req.session.user_id = userRandomId; //set cookie to generated random string (or user identifier)
     res.redirect("/urls")
   }
 })
