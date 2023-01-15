@@ -16,7 +16,7 @@ const userValidator = function (userProperty, reqBody, database) { //Function to
   return true;
 }
 
-const getUserByEmail = function (email, database) {
+const getUserByEmail = function (email, database) { //retrieve user email by looking up id in database, and then returning object if found
   for (const id in database) {
     if (email === database[id]['email']) {
       return database[id]['id']
@@ -24,7 +24,7 @@ const getUserByEmail = function (email, database) {
   }
 }
 
-const urlsForUser = (id, database) => {
+const urlsForUser = (id, database) => { //match userId from urlDatabase object and users object, return user url database
   const matchingIdObject = {};
   for (const key in database) {
     if (database[key].userID === id) {
