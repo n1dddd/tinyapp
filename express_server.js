@@ -36,19 +36,19 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  if (!users[req.session.user_id]) {
+  const templateVars = { user: users[req.session.user_id] };
+  if (!templateVars.user) {
     res.redirect("/login");
   }
-  const templateVars = { user: users[req.session.user_id] };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.user_id] };
-  if (!users[req.session.user_id]) {
+  if (!templateVars.user) {
     res.status(401).send("Must be logged in to see this");
   }
-  if (users[req.session.user_id] && !(urlsForUser(templateVars.user["id"], urlDatabase)[templateVars.id])) { //checks if user, then validated that the urls they are trying to access are not theirs
+  if (templateVars.user && !(urlsForUser(templateVars.user["id"], urlDatabase)[templateVars.id])) { //checks if user, then validated that the urls they are trying to access are not theirs
     res.status(403).send("Not your urls");
   }
   res.render("urls_show", templateVars);
@@ -60,19 +60,19 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  if (users[req.session.user_id]) { //if logged in, redirect to /urls
+  const templateVars = { user: users[req.session.user_id] };
+  if (templateVars.user) { //if logged in, redirect to /urls
     res.redirect("/urls");
-  } else if (!users[req.session.user_id]) {
-    const templateVars = { user: users[req.session.user_id] };
+  } else if (!templateVars.user) {
     res.render("register", templateVars);
   }
 });
 
 app.get("/login", (req, res) => {
-  if (users[req.session.user_id]) {
+  const templateVars = { user: users[req.session.user_id] };
+  if (templateVars.user) {
     res.redirect("/urls");
-  } else if (!users[req.session.user_id]) {
-    const templateVars = { user: users[req.session.user_id] };
+  } else if (!templateVars.user) {
     res.render("login", templateVars);
   }
 });
@@ -96,10 +96,10 @@ app.post("/urls/:id/delete", (req, res) => {
     longURL: urlDatabase[req.params.id]['longURL'],
     user: req.session.user_id
   };
-  if (!users[req.session.user_id]) {
+  if (!variables.user) {
     res.status(401).send("Must be logged in to do this");
   }
-  if (users[req.session.user_id] && !(urlsForUser(variables.user, urlDatabase)[variables.id])) {
+  if (variables.user && !(urlsForUser(variables.user, urlDatabase)[variables.id])) {
     res.status(403).send("Not yours to delete!");
   }
   delete urlDatabase[variables.id];
@@ -112,10 +112,10 @@ app.post("/urls/:id", (req, res) => {
     longURL: urlDatabase[req.params.id]['longURL'],
     user: req.session.user_id
   };
-  if (!users[req.session.user_id]) {
+  if (!variables.user) {
     res.status(401).send("Must be logged in to do this");
   }
-  if (users[req.session.user_id] && !(urlsForUser(variables.user, urlDatabase)[variables.id])) {
+  if (variables.user && !(urlsForUser(variables.user, urlDatabase)[variables.id])) {
     res.status(403).send('Not yours to update!');
   }
   urlDatabase[req.params.id].longURL = req.body.newURL;
@@ -140,13 +140,13 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  if (!req.body.email || !req.body.password) {
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!email || !password) {
     return res.status(400).send(`Please enter valid entriers into BOTH data fields`);
   } else if (!userValidator('email', req.body, users)) {
     return res.status(400).send(`User with the email ${req.body['email']} already registered.`);
   } else if (userValidator('email', req.body, users)) {
-    const email = req.body.email;
-    const password = req.body.password;
     const hashedPassword = bcrypt.hashSync(password, 10); //hash password
     const userRandomId = generateRandomString();
     users[userRandomId] = { //create new user with generated random string in users object
